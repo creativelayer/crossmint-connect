@@ -19,6 +19,11 @@ export interface CrossmintEmbedParams {
      * If metadata is not provided, it will be extracted from your application automatically
      */
     appMetadata?: AppMetadata;
+
+    /**
+     * Iframe element to use for the embed, if not set a popup will be used.
+     */
+    iframe?: HTMLIFrameElement;
 }
 
 export interface AppMetadata {
@@ -39,6 +44,11 @@ export interface CrossmintEmbedConfig {
     maxTimeAutoConnectMs: number;
 
     appMetadata?: AppMetadata;
+
+    /**
+     * Iframe element to use for the embed, if not set a popup will be used.
+     */
+    iframe?: HTMLIFrameElement;
 }
 
 export enum CrossmintEnvironment {

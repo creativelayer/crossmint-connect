@@ -1,5 +1,6 @@
 import StorageAdapter from "./adapters/StorageAdapter";
 import WindowAdapter from "./adapters/WindowAdapter";
+import IFrameAdaptor from "./adapters/IFrameAdaptor";
 import { ALLOWED_ORIGINS } from "./consts/origins";
 import { CrossmintEmbedConfig } from "./types";
 import {
@@ -31,8 +32,16 @@ export default class CrossmintEmbed {
     }
 
     async login(): Promise<string | undefined | null> {
-        const crossmintWindow = new WindowAdapter();
-        crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        let crossmintWindow: WindowAdapter | IFrameAdaptor;
+
+        if (this._config.iframe) {
+            crossmintWindow = new IFrameAdaptor();
+            await crossmintWindow.init({ iframe: this._config.iframe, url: this._frameUrl});
+        } else {
+            crossmintWindow = new WindowAdapter();
+            crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        }
+
 
         if (this._config.autoConnect) {
             const account = await this.getLoginFromIFrame();
@@ -60,7 +69,9 @@ export default class CrossmintEmbed {
 
                         _account = account;
                         // await StorageAdapter.storeAccountForChain(_account, this._config.chain);
-                        crossmintWindow.controlledWindow?.close();
+                        if (crossmintWindow instanceof WindowAdapter) {
+                            crossmintWindow.controlledWindow?.close();
+                        }
                         break;
                     case CrossmintEmbedRequestType.USER_REJECT:
                         console.log("[crossmint-connect] User rejected login");
@@ -90,8 +101,18 @@ export default class CrossmintEmbed {
     }
 
     async signMessage(message: Uint8Array): Promise<Uint8Array | undefined | null> {
-        const crossmintWindow = new WindowAdapter();
-        crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        // const crossmintWindow = new WindowAdapter();
+        // crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+
+        let crossmintWindow: WindowAdapter | IFrameAdaptor;
+
+        if (this._config.iframe) {
+            crossmintWindow = new IFrameAdaptor();
+            await crossmintWindow.init({ iframe: this._config.iframe, url: this._frameUrl});
+        } else {
+            crossmintWindow = new WindowAdapter();
+            crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        }
 
         return await new Promise<Uint8Array | undefined | null>(async (resolve, reject) => {
             console.log("[crossmint-connect] Waiting sign message");
