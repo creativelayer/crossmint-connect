@@ -24,6 +24,8 @@ export default class CrossmintEmbed {
         this._config = config;
     }
 
+    static crossmintWindow: WindowAdapter | undefined;
+
     static init(config: CrossmintEmbedConfig) {
         const client = new CrossmintEmbed(config);
 
@@ -31,15 +33,16 @@ export default class CrossmintEmbed {
     }
 
     async login(): Promise<string | undefined | null> {
-        const crossmintWindow = new WindowAdapter();
-        crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        CrossmintEmbed.crossmintWindow = new WindowAdapter();
+        CrossmintEmbed.crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
 
         if (this._config.autoConnect) {
             const account = await this.getLoginFromIFrame();
 
             if (account != null) {
                 console.log("[crossmint-connect] Received account from auto connect");
-                crossmintWindow.close();
+                CrossmintEmbed.crossmintWindow.close();
+                CrossmintEmbed.crossmintWindow = undefined;
                 return account;
             }
         }
@@ -60,7 +63,8 @@ export default class CrossmintEmbed {
 
                         _account = account;
                         // await StorageAdapter.storeAccountForChain(_account, this._config.chain);
-                        crossmintWindow.controlledWindow?.close();
+                        CrossmintEmbed?.crossmintWindow?.controlledWindow?.close();
+                        CrossmintEmbed.crossmintWindow = undefined;
                         break;
                     case CrossmintEmbedRequestType.USER_REJECT:
                         console.log("[crossmint-connect] User rejected login");
@@ -73,9 +77,9 @@ export default class CrossmintEmbed {
 
             window.addEventListener("message", handleMessage);
 
-            while (crossmintWindow.open && crossmintWindow.controlledWindow) {
+            while (CrossmintEmbed?.crossmintWindow?.open && CrossmintEmbed?.crossmintWindow?.controlledWindow) {
                 this.postMessage(
-                    crossmintWindow.controlledWindow,
+                    CrossmintEmbed.crossmintWindow.controlledWindow,
                     CrossmintEmbedRequestType.REQUEST_ACCOUNTS,
                     undefined,
                     this._frameUrl
@@ -90,8 +94,8 @@ export default class CrossmintEmbed {
     }
 
     async signMessage(message: Uint8Array): Promise<Uint8Array | undefined | null> {
-        const crossmintWindow = new WindowAdapter();
-        crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
+        CrossmintEmbed.crossmintWindow = new WindowAdapter();
+        CrossmintEmbed.crossmintWindow.init({ parentWindow: window, url: this._frameUrl });
 
         return await new Promise<Uint8Array | undefined | null>(async (resolve, reject) => {
             console.log("[crossmint-connect] Waiting sign message");
@@ -108,7 +112,8 @@ export default class CrossmintEmbed {
                         const { signedMessage } = data;
 
                         _signedMessage = new Uint8Array(signedMessage.split(",").map(Number));
-                        crossmintWindow.controlledWindow?.close();
+                        CrossmintEmbed?.crossmintWindow?.controlledWindow?.close();
+                        CrossmintEmbed.crossmintWindow = undefined;
                         break;
                     case CrossmintEmbedRequestType.USER_REJECT:
                         console.log("[crossmint-connect] User rejected signMessage");
@@ -121,9 +126,9 @@ export default class CrossmintEmbed {
 
             window.addEventListener("message", handleMessage);
 
-            while (crossmintWindow.open && crossmintWindow.controlledWindow) {
+            while (CrossmintEmbed?.crossmintWindow?.open && CrossmintEmbed?.crossmintWindow?.controlledWindow) {
                 await this.postMessage(
-                    crossmintWindow.controlledWindow,
+                    CrossmintEmbed.crossmintWindow.controlledWindow,
                     CrossmintEmbedRequestType.SIGN_MESSAGE,
                     { message },
                     this._frameUrl

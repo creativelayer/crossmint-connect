@@ -26,6 +26,7 @@
         "prebuild": "yarn run create-version-file",
         "clean": "shx rm -rf lib/*",
         "build": "yarn clean && tsup src/index.ts --format esm,cjs --outDir ./lib --minify --dts",
+        "build-copy": "yarn clean && tsup src/index.ts --format esm,cjs --outDir ./lib --minify --dts && cp lib/index.js ../remx/apps/remx/src/crossmint/lib && cp lib/index.d.ts ../remx/apps/remx/src/crossmint/lib && cp lib/index.cjs ../remx/apps/remx/src/crossmint/lib",
         "fmt": "prettier --write {*,**/*}.{js,ts,jsx,tsx,json}",
         "test": "jest"
     },
